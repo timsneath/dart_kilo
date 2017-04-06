@@ -25,7 +25,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*"
+                "c:/users/tims/appdata/local/lxss/rootfs/usr/include",
+                "c:/users/tims/appdata/local/lxss/rootfs/usr/local/include"            
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
