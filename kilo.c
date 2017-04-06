@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <errno.h>
 
 struct termios orig_termios;
 
@@ -13,12 +14,12 @@ void die(const char *s) {
 
 void disableRawMode() {
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
-    die("tcsettattr");
+    die("tcsetattr");
 }
 
 void enableRawMode() {
   if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
-    die("tcsetattr");
+    die("tcgetattr");
   atexit(disableRawMode);
 
   struct termios raw = orig_termios;
