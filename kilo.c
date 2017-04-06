@@ -1,3 +1,6 @@
+/* kilo.c */
+
+/*** includes ***/
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,8 +8,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+/*** data ***/
 struct termios orig_termios;
 
+/*** terminal ***/
 void die(const char *s) {
   perror(s);
   exit(1);
@@ -34,6 +39,7 @@ void enableRawMode() {
     die("tcsetattr");
 }
 
+/*** init ***/
 int main() {
   enableRawMode();
 
