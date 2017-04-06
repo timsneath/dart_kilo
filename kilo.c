@@ -172,11 +172,11 @@ void editorRefreshScreen() {
 
   editorDrawRows(&ab);
 
+  /* position cursor at current coords */
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
   abAppend(&ab, buf, strlen(buf));
 
-  abAppend(&ab, "\x1b[H", 3);    /* position cursor at origin */
   abAppend(&ab, "\x1b[?25h", 6); /* show cursor */
 
   write(STDOUT_FILENO, ab.b, ab.len);
@@ -184,6 +184,23 @@ void editorRefreshScreen() {
 }
 
 /*** input ***/
+void editorMoveCursor(char key) {
+  switch (key) {
+  case 'w':
+    E.cy--;
+    break;
+  case 'a':
+    E.cx--;
+    break;
+  case 's':
+    E.cy++;
+    break;
+  case 'd':
+    E.cx++;
+    break;
+  }
+}
+
 void editorProcessKeypress() {
   char c = editorReadKey();
 
@@ -192,6 +209,13 @@ void editorProcessKeypress() {
     write(STDOUT_FILENO, "\x1b[2J", 4); /* clear screen */
     write(STDOUT_FILENO, "\x1b[H", 3);  /* position cursor at origin */
     exit(0);
+    break;
+
+  case 'w':
+  case 'a':
+  case 's':
+  case 'd':
+    editorMoveCursor(key);
     break;
   }
 }
