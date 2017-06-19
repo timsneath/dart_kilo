@@ -31,7 +31,7 @@
             }
         },
         {
-            "name": "Win32",
+            "name": "WSL",
             "includePath": [
                 "${localappdata}/lxss/rootfs/usr/include",
                 "${localappdata}/lxss/rootfs/usr/local/include"
