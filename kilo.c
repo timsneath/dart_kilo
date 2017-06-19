@@ -308,8 +308,7 @@ void editorOpen(char *filename) {
   fclose(fp);
 }
 
-void editorSave() 
-{
+void editorSave() {
   if (E.filename == NULL) return;
 
   int len;
@@ -493,6 +492,10 @@ void editorProcessKeypress() {
       write(STDOUT_FILENO, "\x1b[2J", 4); /* clear screen */
       write(STDOUT_FILENO, "\x1b[H", 3);  /* position cursor at origin */
       exit(0);
+      break;
+
+    case CTRL_KEY('s'):
+      editorSave();
       break;
 
     case HOME_KEY:
