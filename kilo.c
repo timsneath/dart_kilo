@@ -268,7 +268,7 @@ void editorDrawRows(struct abuf *ab) {
       int len = E.row[filerow].size - E.coloff;
       if (len < 0) len = 0;
       if (len > E.screencols) len = E.screencols;
-      abAppend(ab, E.row[filerow].chars[E.coloff], len);
+      abAppend(ab, &E.row[filerow].chars[E.coloff], len);
     }
 
     abAppend(ab, "\x1b[K", 3); /* erase in line */
@@ -302,6 +302,8 @@ void editorRefreshScreen() {
 
 /*** input ***/
 void editorMoveCursor(int key) {
+  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+
   switch (key) {
     case ARROW_UP:
       if (E.cy != 0) E.cy--;
@@ -313,7 +315,7 @@ void editorMoveCursor(int key) {
       if (E.cx != 0) E.cx--;
       break;
     case ARROW_RIGHT:
-      E.cx++;
+      if (row && E.cx < row->size) E.cx++;
       break;
   }
 }
