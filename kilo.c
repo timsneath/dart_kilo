@@ -20,8 +20,8 @@
 
 /*** defines ***/
 #define KILO_VERSION "0.0.1"
-#define KILO_TAB_STOP 8
-#define KILO_QUIT_TIMES 3
+#define KILO_TAB_STOP 2
+#define KILO_QUIT_TIMES 2
 
 #define CTRL_KEY(k) ((k)&0x1f)
 
@@ -284,7 +284,7 @@ void editorRowInsertChar(erow *row, int at, int c) {
 }
 
 void editorRowAppendString(erow *row, char *s, size_t len) {
-  row->chars = realloc(row->chars, row->size + len * 1);
+  row->chars = realloc(row->chars, row->size + len + 1);
   memcpy(&row->chars[row->size], s, len);
   row->size += len;
   row->chars[row->size] = '\0';
