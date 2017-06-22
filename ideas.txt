@@ -4,3 +4,4 @@ ctrl+home, ctrl+end
 prompt to change tab stops
 options to display tab stops
 convert to .net native
+copy / paste support
