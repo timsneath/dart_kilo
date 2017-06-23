@@ -3,5 +3,7 @@ ctrl+left, ctrl+right
 ctrl+home, ctrl+end
 prompt to change tab stops
 options to display tab stops
+convert from UNIX to Windows
 convert to .net native
 copy / paste support
+convert tabs to spaces
