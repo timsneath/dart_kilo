@@ -1,4 +1,5 @@
 BUG: search results are not highlighted
+BUG: Can't save a new file to ~/test.c
 
 kilo newfile.cs creates new file rather than failing
 ctrl+left, ctrl+right
