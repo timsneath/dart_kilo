@@ -1,3 +1,5 @@
+BUG: search results are not highlighted
+
 kilo newfile.cs creates new file rather than failing
 ctrl+left, ctrl+right
 ctrl+home, ctrl+end
