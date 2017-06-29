@@ -1,6 +1,7 @@
 BUG: search results are not highlighted
 BUG: Can't save a new file to ~/test.c
 
+add ansi 256 color support
 kilo newfile.cs creates new file rather than failing
 ctrl+left, ctrl+right
 ctrl+home, ctrl+end
