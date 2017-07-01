@@ -48,10 +48,18 @@ enum editorKey {
   PAGE_DOWN
 };
 
-enum editorHighlight { HL_NORMAL = 0, HL_COMMENT, HL_KEYWORD1, HL_KEYWORD2, HL_STRING, HL_NUMBER, HL_MATCH };
+enum editorHighlight {
+  HL_NORMAL = 0,
+  HL_COMMENT,
+  HL_KEYWORD1,
+  HL_KEYWORD2,
+  HL_STRING,
+  HL_NUMBER,
+  HL_MATCH
+};
 
-#define HL_HIGHLIGHT_NUMBERS (1<<0)
-#define HL_HIGHLIGHT_STRINGS (1<<1)
+#define HL_HIGHLIGHT_NUMBERS (1 << 0)
+#define HL_HIGHLIGHT_STRINGS (1 << 1)
 
 /*** data ***/
 struct editorSyntax {
@@ -90,23 +98,17 @@ struct editorConfig {
 struct editorConfig E;
 
 /*** filetypes ***/
-char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
-char *C_HL_keywords[] = {
-  "switch", "if", "while", "for", "break", "continue", "return", "else",
-  "struct", "union", "typedef", "static", "enum", "class", "case", 
+char *C_HL_extensions[] = {".c", ".h", ".cpp", NULL};
+char *C_HL_keywords[] = {"switch",    "if",      "while",   "for",    "break",
+                         "continue",  "return",  "else",    "struct", "union",
+                         "typedef",   "static",  "enum",    "class",  "case",
 
-  "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-  "void|", NULL
-}; 
+                         "int|",      "long|",   "double|", "float|", "char|",
+                         "unsigned|", "signed|", "void|",   NULL};
 
 struct editorSyntax HLDB[] = {
-  {
-    "c",
-    C_HL_extensions,
-    C_HL_keywords,
-    "//",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
-  },
+    {"c", C_HL_extensions, C_HL_keywords, "//",
+     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
@@ -306,7 +308,7 @@ void editorUpdateSyntax(erow *row) {
     }
 
     if (E.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
-      if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || 
+      if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
           (c == '.' && prev_hl == HL_NUMBER)) {
         row->hl[i] = HL_NUMBER;
         i++;
@@ -315,25 +317,25 @@ void editorUpdateSyntax(erow *row) {
       }
     }
 
-   if (prev_sep) {
-     int j;
-     for (j = 0; keywords[j]; j++) {
-       int klen = strlen(keywords[j]);
-       int kw2 = keywords[j][klen - 1] == '|';
-       if (kw2) klen--;
+    if (prev_sep) {
+      int j;
+      for (j = 0; keywords[j]; j++) {
+        int klen = strlen(keywords[j]);
+        int kw2 = keywords[j][klen - 1] == '|';
+        if (kw2) klen--;
 
-       if (!strncmp(&row->render[i], keywords[j], klen) &&
-           is_separator(row->render[i + klen])) {
-         memset(&row->hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, klen);
-         i += klen;
-         break;
-       }
-       if (keywords[j] != NULL) {
-         prev_sep = 0;
-         continue;
-       }
-     }
-   }
+        if (!strncmp(&row->render[i], keywords[j], klen) &&
+            is_separator(row->render[i + klen])) {
+          memset(&row->hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, klen);
+          i += klen;
+          break;
+        }
+        if (keywords[j] != NULL) {
+          prev_sep = 0;
+          continue;
+        }
+      }
+    }
 
     prev_sep = is_separator(c);
     i++;
@@ -342,13 +344,20 @@ void editorUpdateSyntax(erow *row) {
 
 int editorSyntaxToColor(int hl) {
   switch (hl) {
-    case HL_COMMENT: return 32;
-    case HL_KEYWORD1: return 33;
-    case HL_KEYWORD2: return 34;
-    case HL_STRING: return 35;
-    case HL_NUMBER: return 31;
-    case HL_MATCH: return 36;
-    default: return 37;
+    case HL_COMMENT:
+      return 32;
+    case HL_KEYWORD1:
+      return 33;
+    case HL_KEYWORD2:
+      return 34;
+    case HL_STRING:
+      return 35;
+    case HL_NUMBER:
+      return 31;
+    case HL_MATCH:
+      return 36;
+    default:
+      return 37;
   }
 }
 
@@ -580,7 +589,7 @@ void editorSave() {
       editorSetStatusMessage("Save aborted");
       return;
     }
-  editorSelectSyntaxHighlight();
+    editorSelectSyntaxHighlight();
   }
 
   int len;
@@ -748,8 +757,7 @@ void editorDrawRows(struct abuf *ab) {
             int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", current_color);
             abAppend(ab, buf, clen);
           }
-        }
-        else if (hl[j] == HL_NORMAL) {
+        } else if (hl[j] == HL_NORMAL) {
           if (current_color != -1) {
             abAppend(ab, "\x1b[39m", 5);
             current_color = -1;
@@ -780,9 +788,9 @@ void editorDrawStatusBar(struct abuf *ab) {
   int len = snprintf(status, sizeof(status), "%.20s - %d lines %s",
                      E.filename ? E.filename : "[No Name]", E.numrows,
                      E.dirty ? "(modified)" : "");
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d", 
-                     E.syntax ? E.syntax->filetype : "no ft",
-                     E.cy + 1, E.numrows);
+  int rlen =
+      snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
+               E.syntax ? E.syntax->filetype : "no ft", E.cy + 1, E.numrows);
   if (len > E.screencols) len = E.screencols;
   abAppend(ab, status, len);
   while (len < E.screencols) {
