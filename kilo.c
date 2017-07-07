@@ -719,8 +719,9 @@ void editorFind() {
   char *query =
       editorPrompt("Search: %s (Use ESC/Arrows/Enter)", editorFindCallback);
 
-  if (query)
+  if (query) {
     free(query);
+  }
   else {
     E.cx = saved_cx;
     E.cy = saved_cy;
