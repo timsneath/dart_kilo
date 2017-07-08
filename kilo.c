@@ -111,10 +111,31 @@ char *C_HL_keywords[] = {"switch",    "if",      "while",   "for",    "break",
                          "int|",      "long|",   "double|", "float|", "char|",
                          "unsigned|", "signed|", "void|",   NULL};
 
+char *CS_HL_extensions[] = {".cs", NULL};
+char *CS_HL_keywords[] = {"abstract", "break", "char", "continue", "do", "event", "finally", "foreach",
+                          "in", "internal", "namespace", "operator", "params", "readonly", "sealed", 
+                          "static", "this", "typeof", "unsafe", "virtual", "as", "byte", "checked", "decimal",
+                          "double", "explicit", "fixed", "goto", "in", "is", "new", "out", "private", "ref",
+                          "short", "string", "throw", "uint", "ushort", "void", "base", "case", "class",
+                          "default", "else", "extern", "float", "if", "int", "lock", "null", "out",
+                          "protected", "return", "sizeof", "struct", "true", "ulong", "using", "volatile",
+                          "bool", "catch", "const", "delegate", "enum", "false", "for", "implicit", 
+                          "interface", "long", "object", "override", "public", "sbyte", "stackalloc",
+                          "switch", "try", "unchecked", "while",
+
+                          "add|", "alias|", "ascending|", "async|", "await|", "descending|", "dynamic|",
+                          "from|", "get|", "global|", "group|", "into|", "join|", "let|", "nameof|",
+                          "orderby|", "partial|", "remove|", "select|", "set|", "value|", "var|", "when|",
+                          "where|", "yield|", NULL};
+
 struct editorSyntax HLDB[] = {
-    {"c", C_HL_extensions, C_HL_keywords, 
+    {"C", C_HL_extensions, C_HL_keywords, 
      "//", "/*", "*/",
      HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
+
+    {"C#", CS_HL_extensions, CS_HL_keywords,
+     "//", "/*", "*/",
+     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS}
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
