@@ -1,14 +1,7 @@
 import 'dart:io';
+import 'termlib/termlib.dart';
 
-void disableRawMode() {
-  stdin.lineMode = true;
-  stdin.echoMode = true;
-}
-
-void enableRawMode() {
-  stdin.echoMode = false;
-  stdin.lineMode = false;
-}
+final termlib = TermLib();
 
 bool iscntrl(int charCode) {
   if (charCode >= 0x00 && charCode <= 0x1f) return true;
@@ -17,7 +10,7 @@ bool iscntrl(int charCode) {
 }
 
 main(List<String> arguments) {
-  enableRawMode();
+  termlib.enableRawMode();
 
   int charCode;
   String char;
@@ -36,6 +29,6 @@ main(List<String> arguments) {
     }
   }
 
-  disableRawMode();
+  termlib.disableRawMode();
   return 0;
 }
