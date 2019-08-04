@@ -23,9 +23,9 @@ main(List<String> arguments) {
     if (char == 'q') break;
 
     if (iscntrl(charCode)) {
-      print("$charCode");
+      stdout.write("$charCode\r\n");
     } else {
-      print("$charCode ('$char')");
+      stdout.write("$charCode ('$char')\r\n");
     }
   }
 
