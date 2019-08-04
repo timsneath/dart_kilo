@@ -10,22 +10,30 @@ void enableRawMode() {
   stdin.lineMode = false;
 }
 
+bool iscntrl(int charCode) {
+  if (charCode >= 0x00 && charCode <= 0x1f) return true;
+  if (charCode == 0x7f) return true;
+  return false;
+}
+
 main(List<String> arguments) {
   enableRawMode();
 
   int charCode;
   String char;
 
-  charCode = stdin.readByteSync();
-  char = String.fromCharCode(charCode);
-
-  print("charcode: $charCode (char: '$char')");
-
-  while (charCode != -1 && char != 'q') {
+  while (true) {
     charCode = stdin.readByteSync();
-    char = String.fromCharCode(charCode);
+    if (charCode == -1) break;
 
-    print("charcode: $charCode (char: '$char')");
+    char = String.fromCharCode(charCode);
+    if (char == 'q') break;
+
+    if (iscntrl(charCode)) {
+      print("$charCode");
+    } else {
+      print("$charCode ('$char')");
+    }
   }
 
   disableRawMode();
