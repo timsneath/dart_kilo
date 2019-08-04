@@ -1,1 +1,4 @@
-kilo
+.dart_tool/
+.packages
+build/
+termlib/termlib.so
