@@ -1,49 +1,22 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "Win32",
             "includePath": [
-                "/usr/include",
-                "/usr/local/include"
+                "${workspaceFolder}/**",
+                "C:\\git\\flutter\\bin\\cache\\dart-sdk\\include"
             ],
-            "browse": {
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": "",
-                "path": [
-                    "/usr/include",
-                    "/usr/local/include"
-                ]
-            }
-        },
-        {
-            "name": "Linux",
-            "includePath": [
-                "/usr/include",
-                "/usr/local/include"
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
             ],
-            "browse": {
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": "",
-                "path": [
-                    "/usr/include",
-                    "/usr/local/include"
-                ]
-            }
-        },
-        {
-            "name": "WSL",
-            "includePath": [
-                "${localappdata}/lxss/rootfs/usr/include",
-                "${localappdata}/lxss/rootfs/usr/local/include"
-            ],
-            "browse": {
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": "",
-                "path": [
-                    "${localappdata}/lxss/rootfs/usr/include",
-                    "${localappdata}/lxss/rootfs/usr/local/include"
-                ]
-            }
+            "windowsSdkVersion": "10.0.17763.0",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.21.27702/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-x64"
         }
-    ]
+    ],
+    "version": 4
 }
