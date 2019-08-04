@@ -1,34 +1,35 @@
 import 'dart:io';
 import 'termlib/termlib.dart';
 
-final termlib = TermLib();
+final terminal = TermLib();
 
-bool iscntrl(int charCode) {
-  if (charCode >= 0x00 && charCode <= 0x1f) return true;
-  if (charCode == 0x7f) return true;
+int controlCharacter(String key) => key.codeUnitAt(0) & 0x1F;
+
+bool isCodeUnitNonPrintable(int rawCharCode) {
+  if (rawCharCode >= 0x00 && rawCharCode <= 0x1f) return true;
+  if (rawCharCode == 0x7f) return true;
   return false;
 }
 
 main(List<String> arguments) {
-  termlib.enableRawMode();
+  terminal.enableRawMode();
 
-  int charCode;
+  int codeUnit;
   String char;
 
   while (true) {
-    charCode = stdin.readByteSync();
-    if (charCode == -1) break;
+    codeUnit = stdin.readByteSync();
+    if (codeUnit == -1) break;
 
-    char = String.fromCharCode(charCode);
-    if (char == 'q') break;
+    char = String.fromCharCode(codeUnit);
 
-    if (iscntrl(charCode)) {
-      stdout.write("$charCode\r\n");
+    if (isCodeUnitNonPrintable(codeUnit)) {
+      stdout.write("$codeUnit\r\n");
     } else {
-      stdout.write("$charCode ('$char')\r\n");
+      stdout.write("$codeUnit ('$char')\r\n");
     }
+    if (codeUnit == controlCharacter('Q')) break;
   }
 
-  termlib.disableRawMode();
   return 0;
 }
