@@ -7,9 +7,9 @@ final console = Console();
 const kiloVersion = '0.0.1';
 const controlQ = 0x11;
 
-void initEditor() {
-  // die('Size is ${console.windowWidth} cols and ${console.windowHeight} rows.\r\n');
-}
+int cCol = 0, cRow = 0;
+
+void initEditor() {}
 
 void die(String message) {
   console.clearScreen();
@@ -26,6 +26,14 @@ void editorDrawRows() {
       var welcomeMessage = 'Kilo editor -- version $kiloVersion';
       if (console.windowWidth < welcomeMessage.length) {
         welcomeMessage = welcomeMessage.substring(0, console.windowWidth);
+      }
+      int padding = ((console.windowWidth - welcomeMessage.length) / 2).round();
+      if (padding > 0) {
+        console.write('~');
+        padding--;
+      }
+      while (padding-- > 0) {
+        console.write(' ');
       }
       console.write(welcomeMessage);
     } else {
@@ -45,13 +53,31 @@ void editorRefreshScreen() {
 
   editorDrawRows();
 
-  console.resetCursorPosition();
+  console.cursorPosition = Coordinate(cRow, cCol);
   console.showCursor();
 }
 
 // input
+void editorMoveCursor(String key) {
+  switch (key) {
+    case 'a':
+      cCol--;
+      break;
+    case 'd':
+      cCol++;
+      break;
+    case 'w':
+      cRow--;
+      break;
+    case 's':
+      cRow++;
+      break;
+  }
+}
+
 void editorProcessKeypress() {
   final codeUnit = stdin.readByteSync();
+  final char = String.fromCharCode(codeUnit);
 
   switch (codeUnit) {
     case controlQ:
@@ -59,6 +85,10 @@ void editorProcessKeypress() {
       console.resetCursorPosition();
       exit(0);
       break;
+  }
+
+  if ((char == 'w') || (char == 'a') || (char == 's') || (char == 'd')) {
+    editorMoveCursor(char);
   }
 }
 

@@ -6,7 +6,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "4d7f4771b1665f08ec1ffa582157ca6c9a17c1c1"
+      resolved-ref: "7df05163108b361b08eb282ea83b3615ebfd9033"
       url: "git://github.com/timsneath/dart_console.git"
     source: git
     version: "0.1.0"
