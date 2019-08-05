@@ -19,22 +19,25 @@ void die(String message) {
 }
 
 // output
-void editorDrawRows() {
+StringBuffer editorDrawRows() {
+  var buffer = StringBuffer();
   final windowHeight = console.windowHeight;
   for (int y = 0; y < windowHeight; y++) {
-    stdout.write('~');
+    buffer.write('~');
 
     if (y < windowHeight - 1) {
-      stdout.write('\r\n');
+      buffer.write('\r\n');
     }
   }
+  return buffer;
 }
 
 void editorRefreshScreen() {
   console.clearScreen();
   console.resetCursor();
 
-  editorDrawRows();
+  final screen = editorDrawRows();
+  stdout.write(screen.toString());
 
   console.resetCursor();
 }
