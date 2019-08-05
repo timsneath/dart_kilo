@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'termlib/console.dart';
+import 'package:dart_console/dart_console.dart';
 
 final console = Console();
 
@@ -15,7 +15,7 @@ void die(String message) {
   console.clearScreen();
   console.resetCursorPosition();
   console.disableRawMode();
-  stdout.write(message);
+  console.write(message);
   exit(1);
 }
 
@@ -25,14 +25,14 @@ void editorDrawRows() {
     if (y == console.windowHeight / 3) {
       var welcomeMessage = 'Kilo editor -- version $kiloVersion';
       welcomeMessage.substring(0, console.windowWidth); // crop if necessary
-      stdout.write(welcomeMessage);
+      console.write(welcomeMessage);
     } else {
-      stdout.write('~');
+      console.write('~');
     }
     console.clearToLineEnd();
 
     if (y < console.windowHeight - 1) {
-      stdout.write('\r\n');
+      console.write('\r\n');
     }
   }
 }
