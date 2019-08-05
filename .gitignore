@@ -1,4 +1,10 @@
+# Dart assets that don't need checking in
 .dart_tool/
 .packages
 build/
-termlib/termlib.so
+
+# Binary output
+**/*.so
+**/*.dylib
+**/*.dll
+kilo
