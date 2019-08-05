@@ -6,9 +6,14 @@ final console = Console();
 
 const controlQ = 0x11;
 
+void initEditor() {
+  die('Size is ${console.windowWidth} cols and ${console.windowHeight} rows.\r\n');
+}
+
 void die(String message) {
   console.clearScreen();
   console.resetCursor();
+  console.disableRawMode();
   stdout.write(message);
   exit(1);
 }
@@ -44,6 +49,7 @@ void editorProcessKeypress() {
 
 main(List<String> arguments) {
   console.enableRawMode();
+  initEditor();
 
   while (true) {
     editorRefreshScreen();
