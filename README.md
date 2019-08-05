@@ -1,5 +1,5 @@
 An initial attempt at a Dart port of the [Kilo text editor][kilo]. Primarily
-built as a test harness for the `[dart_console][dart_console]` package, which
+built as a test harness for the [`dart_console`][dart_console] package, which
 is itself at an early stage of development. 
 
 Notes from the Kilo project:
