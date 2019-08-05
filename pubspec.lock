@@ -4,11 +4,9 @@ packages:
   dart_console:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "7df05163108b361b08eb282ea83b3615ebfd9033"
-      url: "git://github.com/timsneath/dart_console.git"
-    source: git
+      path: "../dart_console"
+      relative: true
+    source: path
     version: "0.1.0"
   pedantic:
     dependency: "direct dev"
