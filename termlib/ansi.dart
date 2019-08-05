@@ -1,4 +1,5 @@
 const ansiDeviceStatusReportCursorPosition = '\x1b[6n';
+const ansiEraseInLine = '\x1b[K';
 const ansiEraseInDisplayAll = '\x1b[2J';
 const ansiHideCursor = '\x1b[?25l';
 const ansiShowCursor = '\x1b[?25h';

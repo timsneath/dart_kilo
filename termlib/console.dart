@@ -15,62 +15,96 @@ class Coordinate {
       other is Coordinate && row == other.row && col == other.col;
 }
 
+enum TextAlignment { Left, Center, Right }
+
 class Console {
+  // We cache these values so we don't have to keep retrieving them. The
+  // downside is that the class isn't dynamically responsive to a resized
+  // console, but that's not unusual for console applications anyway.
+  int _windowWidth = 0;
+  int _windowHeight = 0;
+
+  bool _rawMode = false;
+
   final termlib = TermLib();
 
-  void enableRawMode() => termlib.enableRawMode();
-  void disableRawMode() => termlib.disableRawMode();
+  // Console options and screen information
+  void enableRawMode() {
+    _rawMode = true;
+    termlib.enableRawMode();
+  }
+
+  void disableRawMode() {
+    _rawMode = false;
+    termlib.disableRawMode();
+  }
 
   void clearScreen() => stdout.write(ansiEraseInDisplayAll);
-  void setCursor(Coordinate coordinate) => stdout
-      .write(ansiCursorPosition(row: coordinate.row, col: coordinate.col));
-  void resetCursor() => stdout.write(ansiCursorPosition());
+  void clearToLineEnd() => stdout.write(ansiEraseInLine);
 
   int get windowWidth {
-    // termlib tries ioctl() to give us the screen size, but we fall back to
-    // the approach of setting the cursor to beyond the edge of the screen and
-    // then reading back the actual position of the cursor
-    final width = termlib.getWindowWidth();
-    if (width != -1) {
-      return width;
-    } else {
-      final originalCursor = cursorPosition;
-      stdout.write(ansiMoveCursorToScreenEdge);
-      final newCursor = cursorPosition;
-      setCursor(originalCursor);
-
-      if (newCursor != null) {
-        return newCursor.col;
+    if (_windowWidth == 0) {
+      // try using ioctl() to give us the screen size
+      final width = termlib.getWindowWidth();
+      if (width != -1) {
+        _windowWidth = width;
       } else {
-        throw Exception("Couldn't retrieve window width");
+        // otherwise, fall back to the approach of setting the cursor to beyond
+        // the edge of the screen and then reading back its actual position
+        final originalCursor = cursorPosition;
+        stdout.write(ansiMoveCursorToScreenEdge);
+        final newCursor = cursorPosition;
+        setCursor(originalCursor);
+
+        if (newCursor != null) {
+          _windowWidth = newCursor.col;
+        } else {
+          // we've run out of options; terminal is unsupported
+          throw Exception("Couldn't retrieve window width");
+        }
       }
     }
+
+    return _windowWidth;
   }
 
   int get windowHeight {
-    // termlib tries ioctl() to give us the screen size, but we fall back to
-    // the approach of setting the cursor to beyond the edge of the screen and
-    // then reading back the actual position of the cursor
-    final height = termlib.getWindowHeight();
-    if (height != -1) {
-      return height;
-    } else {
-      final originalCursor = cursorPosition;
-      stdout.write(ansiMoveCursorToScreenEdge);
-      final newCursor = cursorPosition;
-      setCursor(originalCursor);
-
-      if (newCursor != null) {
-        return newCursor.row;
+    if (_windowHeight == 0) {
+      // try using ioctl() to give us the screen size
+      final height = termlib.getWindowHeight();
+      if (height != -1) {
+        _windowHeight = height;
       } else {
-        throw Exception("Couldn't retrieve window height");
+        // otherwise, fall back to the approach of setting the cursor to beyond
+        // the edge of the screen and then reading back its actual position
+        final originalCursor = cursorPosition;
+        stdout.write(ansiMoveCursorToScreenEdge);
+        final newCursor = cursorPosition;
+        setCursor(originalCursor);
+
+        if (newCursor != null) {
+          _windowHeight = newCursor.row;
+        } else {
+          // we've run out of options; terminal is unsupported
+          throw Exception("Couldn't retrieve window height");
+        }
       }
     }
+
+    return _windowHeight;
   }
+
+  // Cursor settings
+  void hideCursor() => stdout.write(ansiHideCursor);
+  void showCursor() => stdout.write(ansiShowCursor);
+  void setCursor(Coordinate coordinate) => stdout
+      .write(ansiCursorPosition(row: coordinate.row, col: coordinate.col));
+  void resetCursorPosition() => stdout.write(ansiCursorPosition());
 
   Coordinate get cursorPosition {
     stdout.write(ansiDeviceStatusReportCursorPosition);
     // returns a result in the form <ESC>[24;80R
+    // which we have to parse apart, unfortunately
     String result = '';
     int i = 0;
 
@@ -94,4 +128,34 @@ class Console {
       return null;
     }
   }
+
+  // Writing
+  void write(String text) => stdout.write(text);
+  void writeLine(String text) {
+    stdout.write(text);
+    if (_rawMode) {
+      stdout.write('\r\n');
+    } else {
+      stdout.write('\n');
+    }
+  }
+
+  void writeAligned(String text, TextAlignment alignment) {
+    switch (alignment) {
+      case TextAlignment.Center:
+        int padding = (windowWidth - text.length / 2) as int;
+        while (padding-- > 0) {
+          stdout.write(' ');
+        }
+        break;
+      case TextAlignment.Right:
+        text = text.padLeft(windowWidth);
+        stdout.write(text);
+        break;
+      default:
+        stdout.write(text);
+    }
+  }
+
+  Console() {}
 }

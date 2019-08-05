@@ -4,6 +4,7 @@ import 'termlib/console.dart';
 
 final console = Console();
 
+const kiloVersion = '0.0.1';
 const controlQ = 0x11;
 
 void initEditor() {
@@ -12,34 +13,38 @@ void initEditor() {
 
 void die(String message) {
   console.clearScreen();
-  console.resetCursor();
+  console.resetCursorPosition();
   console.disableRawMode();
   stdout.write(message);
   exit(1);
 }
 
 // output
-StringBuffer editorDrawRows() {
-  var buffer = StringBuffer();
-  final windowHeight = console.windowHeight;
-  for (int y = 0; y < windowHeight; y++) {
-    buffer.write('~');
+void editorDrawRows() {
+  for (int y = 0; y < console.windowHeight; y++) {
+    if (y == console.windowHeight / 3) {
+      var welcomeMessage = 'Kilo editor -- version $kiloVersion';
+      welcomeMessage.substring(0, console.windowWidth); // crop if necessary
+      stdout.write(welcomeMessage);
+    } else {
+      stdout.write('~');
+    }
+    console.clearToLineEnd();
 
-    if (y < windowHeight - 1) {
-      buffer.write('\r\n');
+    if (y < console.windowHeight - 1) {
+      stdout.write('\r\n');
     }
   }
-  return buffer;
 }
 
 void editorRefreshScreen() {
-  console.clearScreen();
-  console.resetCursor();
+  console.hideCursor();
+  console.resetCursorPosition();
 
-  final screen = editorDrawRows();
-  stdout.write(screen.toString());
+  editorDrawRows();
 
-  console.resetCursor();
+  console.resetCursorPosition();
+  console.showCursor();
 }
 
 // input
@@ -49,7 +54,7 @@ void editorProcessKeypress() {
   switch (codeUnit) {
     case controlQ:
       console.clearScreen();
-      console.resetCursor();
+      console.resetCursorPosition();
       exit(0);
       break;
   }
