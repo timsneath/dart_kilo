@@ -7,7 +7,7 @@ final console = Console();
 const controlQ = 0x11;
 
 void initEditor() {
-  die('Size is ${console.windowWidth} cols and ${console.windowHeight} rows.\r\n');
+  // die('Size is ${console.windowWidth} cols and ${console.windowHeight} rows.\r\n');
 }
 
 void die(String message) {
@@ -20,8 +20,13 @@ void die(String message) {
 
 // output
 void editorDrawRows() {
-  for (int y = 0; y < console.windowHeight; y++) {
-    stdout.write('~\r\n');
+  final windowHeight = console.windowHeight;
+  for (int y = 0; y < windowHeight; y++) {
+    stdout.write('~');
+
+    if (y < windowHeight - 1) {
+      stdout.write('\r\n');
+    }
   }
 }
 
