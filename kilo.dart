@@ -22,7 +22,7 @@ void die(String message) {
 // output
 void editorDrawRows() {
   for (int y = 0; y < console.windowHeight; y++) {
-    if (y == console.windowHeight / 3) {
+    if (y == (console.windowHeight / 3).round()) {
       var welcomeMessage = 'Kilo editor -- version $kiloVersion';
       if (console.windowWidth < welcomeMessage.length) {
         welcomeMessage = welcomeMessage.substring(0, console.windowWidth);
