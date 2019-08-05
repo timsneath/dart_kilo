@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   dart_console:
-    git: git://github.com/timsneath/dart_console.git
+    path: ../dart_console
 
 dev_dependencies:
   pedantic: ^1.8.0+1
