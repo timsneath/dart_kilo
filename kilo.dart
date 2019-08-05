@@ -24,7 +24,9 @@ void editorDrawRows() {
   for (int y = 0; y < console.windowHeight; y++) {
     if (y == console.windowHeight / 3) {
       var welcomeMessage = 'Kilo editor -- version $kiloVersion';
-      welcomeMessage.substring(0, console.windowWidth); // crop if necessary
+      if (console.windowWidth < welcomeMessage.length) {
+        welcomeMessage = welcomeMessage.substring(0, console.windowWidth);
+      }
       console.write(welcomeMessage);
     } else {
       console.write('~');
