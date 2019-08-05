@@ -2,6 +2,7 @@
 //    gcc -shared -fPIC -o termlib/termlib.so termlib/termlib.c
 
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -28,4 +29,30 @@ void enableRawMode()
     // raw.c_cc[VTIME] = 1;
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
+int getWindowHeight()
+{
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_row == 0)
+    {
+        return -1;
+    }
+    else
+    {
+        return ws.ws_row;
+    }
+}
+
+int getWindowWidth()
+{
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+    {
+        return -1;
+    }
+    else
+    {
+        return ws.ws_col;
+    }
 }
