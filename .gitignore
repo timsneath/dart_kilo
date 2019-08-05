@@ -1,1 +1,10 @@
+# Dart assets that don't need checking in
+.dart_tool/
+.packages
+build/
+
+# Binary output
+**/*.so
+**/*.dylib
+**/*.dll
 kilo
