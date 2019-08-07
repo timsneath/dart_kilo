@@ -58,37 +58,62 @@ void editorRefreshScreen() {
 }
 
 // input
-void editorMoveCursor(String key) {
+void editorMoveCursor(ControlCharacter key) {
   switch (key) {
-    case 'a':
-      cCol--;
+    case ControlCharacter.arrowLeft:
+      if (cCol != 0) cCol--;
       break;
-    case 'd':
-      cCol++;
+    case ControlCharacter.arrowRight:
+      if (cCol != console.windowWidth - 1) cCol++;
       break;
-    case 'w':
-      cRow--;
+    case ControlCharacter.arrowUp:
+      if (cRow != 0) cRow--;
       break;
-    case 's':
-      cRow++;
+    case ControlCharacter.arrowDown:
+      if (cRow != console.windowHeight - 1) cRow++;
       break;
+    case ControlCharacter.pageUp:
+      for (var i = 0; i < console.windowHeight; i++) {
+        editorMoveCursor(ControlCharacter.arrowUp);
+      }
+      break;
+    case ControlCharacter.pageDown:
+      for (var i = 0; i < console.windowHeight; i++) {
+        editorMoveCursor(ControlCharacter.arrowDown);
+      }
+      break;
+    case ControlCharacter.home:
+      cCol = 0;
+      break;
+    case ControlCharacter.end:
+      cCol = console.windowWidth - 1;
+      break;
+    default:
   }
 }
 
 void editorProcessKeypress() {
-  final codeUnit = stdin.readByteSync();
-  final char = String.fromCharCode(codeUnit);
+  final key = console.readKey();
 
-  switch (codeUnit) {
-    case controlQ:
-      console.clearScreen();
-      console.resetCursorPosition();
-      exit(0);
-      break;
-  }
-
-  if ((char == 'w') || (char == 'a') || (char == 's') || (char == 'd')) {
-    editorMoveCursor(char);
+  if (key.isControl) {
+    switch (key.controlChar) {
+      case ControlCharacter.ctrlQ:
+        console.clearScreen();
+        console.resetCursorPosition();
+        exit(0);
+        break;
+      case ControlCharacter.arrowLeft:
+      case ControlCharacter.arrowUp:
+      case ControlCharacter.arrowRight:
+      case ControlCharacter.arrowDown:
+      case ControlCharacter.pageUp:
+      case ControlCharacter.pageDown:
+      case ControlCharacter.home:
+      case ControlCharacter.end:
+        editorMoveCursor(key.controlChar);
+        break;
+      default:
+    }
   }
 }
 

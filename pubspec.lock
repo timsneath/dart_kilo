@@ -4,7 +4,7 @@ packages:
   dart_console:
     dependency: "direct main"
     description:
-      path: "..\\dart_console"
+      path: "../dart_console"
       relative: true
     source: path
     version: "0.1.0"
