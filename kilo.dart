@@ -6,7 +6,6 @@ import 'package:dart_console/dart_console.dart';
 final console = Console();
 
 const kiloVersion = '0.0.1';
-const controlQ = 0x11;
 
 // Cursor location relative to file (not the screen)
 int cursorCol = 0, cursorRow = 0;
