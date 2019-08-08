@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' show min;
 
 import 'package:dart_console/dart_console.dart';
 
@@ -119,10 +120,22 @@ void editorRefreshScreen() {
 void editorMoveCursor(ControlCharacter key) {
   switch (key) {
     case ControlCharacter.arrowLeft:
-      if (cursorCol != 0) cursorCol--;
+      if (cursorCol != 0) {
+        cursorCol--;
+      } else if (cursorRow > 0) {
+        cursorRow--;
+        cursorCol = editorRows[cursorRow].length;
+      }
       break;
     case ControlCharacter.arrowRight:
-      cursorCol++;
+      if (cursorRow < editorRows.length) {
+        if (cursorCol < editorRows[cursorRow].length) {
+          cursorCol++;
+        } else if (cursorCol == editorRows[cursorRow].length) {
+          cursorCol = 0;
+          cursorRow++;
+        }
+      }
       break;
     case ControlCharacter.arrowUp:
       if (cursorRow != 0) cursorRow--;
@@ -147,6 +160,10 @@ void editorMoveCursor(ControlCharacter key) {
       cursorCol = console.windowWidth - 1;
       break;
     default:
+  }
+
+  if (cursorRow < editorRows.length) {
+    cursorCol = min(cursorCol, editorRows[cursorRow].length);
   }
 }
 
