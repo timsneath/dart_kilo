@@ -86,10 +86,11 @@ void editorDrawRows() {
     // Otherwise print the onscreen portion of the current file row,
     // trimmed if necessary
     else {
-      if (editorRows[fileRow].length - screenRowColOffset > 0) {}
-      console.write(truncateString(
-          editorRows[fileRow].substring(screenRowColOffset),
-          console.windowWidth));
+      if (editorRows[fileRow].length - screenRowColOffset > 0) {
+        console.write(truncateString(
+            editorRows[fileRow].substring(screenRowColOffset),
+            console.windowWidth));
+      }
     }
     console.clearToLineEnd();
 
@@ -176,12 +177,17 @@ void editorProcessKeypress() {
 }
 
 main(List<String> arguments) {
-  console.enableRawMode();
-  initEditor();
-  if (arguments.isNotEmpty) editorOpen(arguments[0]);
+  try {
+    console.enableRawMode();
+    initEditor();
+    if (arguments.isNotEmpty) editorOpen(arguments[0]);
 
-  while (true) {
-    editorRefreshScreen();
-    editorProcessKeypress();
+    while (true) {
+      editorRefreshScreen();
+      editorProcessKeypress();
+    }
+  } catch (exception) {
+    console.disableRawMode();
+    rethrow;
   }
 }
