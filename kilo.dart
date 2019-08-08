@@ -7,7 +7,10 @@ final console = Console();
 const kiloVersion = '0.0.1';
 const controlQ = 0x11;
 
+// Cursor location relative to screen
 int cCol = 0, cRow = 0;
+
+var editorRows = [];
 
 void initEditor() {}
 
@@ -19,30 +22,40 @@ void die(String message) {
   exit(1);
 }
 
+// file i/o
+void editorOpen() {
+  editorRows.add('Hello world!');
+}
+
 // output
 void editorDrawRows() {
   for (int y = 0; y < console.windowHeight; y++) {
-    if (y == (console.windowHeight / 3).round()) {
-      var welcomeMessage = 'Kilo editor -- version $kiloVersion';
-      if (console.windowWidth < welcomeMessage.length) {
-        welcomeMessage = welcomeMessage.substring(0, console.windowWidth);
-      }
-      int padding = ((console.windowWidth - welcomeMessage.length) / 2).round();
-      if (padding > 0) {
+    if (y >= editorRows.length) {
+      if (y == (console.windowHeight / 3).round()) {
+        var welcomeMessage = 'Kilo editor -- version $kiloVersion';
+        if (console.windowWidth < welcomeMessage.length) {
+          welcomeMessage = welcomeMessage.substring(0, console.windowWidth);
+        }
+        int padding =
+            ((console.windowWidth - welcomeMessage.length) / 2).round();
+        if (padding > 0) {
+          console.write('~');
+          padding--;
+        }
+        while (padding-- > 0) {
+          console.write(' ');
+        }
+        console.write(welcomeMessage);
+      } else {
         console.write('~');
-        padding--;
       }
-      while (padding-- > 0) {
-        console.write(' ');
-      }
-      console.write(welcomeMessage);
-    } else {
-      console.write('~');
-    }
-    console.clearToLineEnd();
+      console.clearToLineEnd();
 
-    if (y < console.windowHeight - 1) {
-      console.write('\r\n');
+      if (y < console.windowHeight - 1) {
+        console.write('\r\n');
+      }
+    } else {
+      console.write(editorRows[0]);
     }
   }
 }
@@ -100,6 +113,7 @@ void editorProcessKeypress() {
       case ControlCharacter.ctrlQ:
         console.clearScreen();
         console.resetCursorPosition();
+        console.disableRawMode();
         exit(0);
         break;
       case ControlCharacter.arrowLeft:
@@ -120,6 +134,7 @@ void editorProcessKeypress() {
 main(List<String> arguments) {
   console.enableRawMode();
   initEditor();
+  editorOpen();
 
   while (true) {
     editorRefreshScreen();
