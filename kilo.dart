@@ -7,11 +7,13 @@ final console = Console();
 const kiloVersion = '0.0.1';
 const controlQ = 0x11;
 
-// Cursor location relative to screen
-int cCol = 0, cRow = 0;
+// Cursor location relative to file (not the screen)
+int cursorCol = 0, cursorRow = 0;
 
-// Pointer to the row that is currently at the top of the screen
-int rowOffset = 0;
+// The row in the file that is currently at the top of the screen
+int screenFileRowOffset = 0;
+// The column in the row that is currently on the left of the screen
+int screenRowColOffset = 0;
 
 var editorRows = <String>[];
 
@@ -25,12 +27,8 @@ void die(String message) {
   exit(1);
 }
 
-String trimStringToWindowWidth(String text) {
-  if (console.windowWidth < text.length) {
-    text = text.substring(0, console.windowWidth);
-  }
-  return text;
-}
+String truncateString(String text, int length) =>
+    length < text.length ? text.substring(0, length) : text;
 
 // file i/o
 void editorOpen(String filename) {
@@ -39,12 +37,37 @@ void editorOpen(String filename) {
 }
 
 // output
+void editorScroll() {
+  if (cursorRow < screenFileRowOffset) {
+    screenFileRowOffset = cursorRow;
+  }
+
+  if (cursorRow >= screenFileRowOffset + console.windowHeight) {
+    screenFileRowOffset = cursorRow - console.windowHeight + 1;
+  }
+
+  if (cursorCol < screenRowColOffset) {
+    screenRowColOffset = cursorCol;
+  }
+
+  if (cursorCol >= screenRowColOffset + console.windowWidth) {
+    screenRowColOffset = cursorCol - console.windowWidth + 1;
+  }
+}
+
 void editorDrawRows() {
-  for (int row = 0; row < console.windowHeight; row++) {
-    if (row >= editorRows.length) {
-      if (editorRows.isEmpty && (row == (console.windowHeight / 3).round())) {
-        final welcomeMessage =
-            trimStringToWindowWidth('Kilo editor -- version $kiloVersion');
+  for (int screenRow = 0; screenRow < console.windowHeight; screenRow++) {
+    // fileRow is the row of the file we want to print to screenRow
+    final fileRow = screenFileRowOffset + screenRow;
+
+    // If we're beyond the text buffer, print tilde in column 0
+    if (fileRow >= editorRows.length) {
+      // Show a welcome message
+      if (editorRows.isEmpty &&
+          (screenRow == (console.windowHeight / 3).round())) {
+        // Print the welcome message centered a third of the way down the screen
+        final welcomeMessage = truncateString(
+            'Kilo editor -- version $kiloVersion', console.windowWidth);
         int padding =
             ((console.windowWidth - welcomeMessage.length) / 2).round();
         if (padding > 0) {
@@ -58,25 +81,36 @@ void editorDrawRows() {
       } else {
         console.write('~');
       }
-    } else {
-      // trim as necessary so this line doesn't fall off the edge of the screen
-      console.write(trimStringToWindowWidth(editorRows[row]));
+    }
+
+    // Otherwise print the onscreen portion of the current file row,
+    // trimmed if necessary
+    else {
+      if (editorRows[fileRow].length - screenRowColOffset > 0) {}
+      console.write(truncateString(
+          editorRows[fileRow].substring(screenRowColOffset),
+          console.windowWidth));
     }
     console.clearToLineEnd();
 
-    if (row < console.windowHeight - 1) {
+    // We're in raw mode, so we have to perform 'return to row 0' and 'line
+    // feed' separately
+    if (screenRow < console.windowHeight - 1) {
       console.write('\r\n');
     }
   }
 }
 
 void editorRefreshScreen() {
+  editorScroll();
+
   console.hideCursor();
   console.resetCursorPosition();
 
   editorDrawRows();
 
-  console.cursorPosition = Coordinate(cRow, cCol);
+  console.cursorPosition = Coordinate(
+      cursorRow - screenFileRowOffset, cursorCol - screenRowColOffset);
   console.showCursor();
 }
 
@@ -84,16 +118,16 @@ void editorRefreshScreen() {
 void editorMoveCursor(ControlCharacter key) {
   switch (key) {
     case ControlCharacter.arrowLeft:
-      if (cCol != 0) cCol--;
+      if (cursorCol != 0) cursorCol--;
       break;
     case ControlCharacter.arrowRight:
-      if (cCol != console.windowWidth - 1) cCol++;
+      cursorCol++;
       break;
     case ControlCharacter.arrowUp:
-      if (cRow != 0) cRow--;
+      if (cursorRow != 0) cursorRow--;
       break;
     case ControlCharacter.arrowDown:
-      if (cRow != console.windowHeight - 1) cRow++;
+      if (cursorRow < editorRows.length) cursorRow++;
       break;
     case ControlCharacter.pageUp:
       for (var i = 0; i < console.windowHeight; i++) {
@@ -106,10 +140,10 @@ void editorMoveCursor(ControlCharacter key) {
       }
       break;
     case ControlCharacter.home:
-      cCol = 0;
+      cursorCol = 0;
       break;
     case ControlCharacter.end:
-      cCol = console.windowWidth - 1;
+      cursorCol = console.windowWidth - 1;
       break;
     default:
   }
