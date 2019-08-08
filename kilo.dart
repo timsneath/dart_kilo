@@ -57,6 +57,8 @@ void editorScroll() {
 }
 
 void editorDrawRows() {
+  final screenBuffer = StringBuffer();
+
   for (int screenRow = 0; screenRow < console.windowHeight; screenRow++) {
     // fileRow is the row of the file we want to print to screenRow
     final fileRow = screenFileRowOffset + screenRow;
@@ -72,15 +74,15 @@ void editorDrawRows() {
         int padding =
             ((console.windowWidth - welcomeMessage.length) / 2).round();
         if (padding > 0) {
-          console.write('~');
+          screenBuffer.write('~');
           padding--;
         }
         while (padding-- > 0) {
-          console.write(' ');
+          screenBuffer.write(' ');
         }
-        console.write(welcomeMessage);
+        screenBuffer.write(welcomeMessage);
       } else {
-        console.write('~');
+        screenBuffer.write('~');
       }
     }
 
@@ -88,26 +90,27 @@ void editorDrawRows() {
     // trimmed if necessary
     else {
       if (editorRows[fileRow].length - screenRowColOffset > 0) {
-        console.write(truncateString(
+        screenBuffer.write(truncateString(
             editorRows[fileRow].substring(screenRowColOffset),
             console.windowWidth));
       }
     }
-    console.clearToLineEnd();
 
     // We're in raw mode, so we have to perform 'return to row 0' and 'line
     // feed' separately
     if (screenRow < console.windowHeight - 1) {
-      console.write('\r\n');
+      screenBuffer.write('\r\n');
     }
   }
+
+  console.write(screenBuffer.toString());
 }
 
 void editorRefreshScreen() {
   editorScroll();
 
   console.hideCursor();
-  console.resetCursorPosition();
+  console.clearScreen();
 
   editorDrawRows();
 
