@@ -10,6 +10,9 @@ const controlQ = 0x11;
 // Cursor location relative to screen
 int cCol = 0, cRow = 0;
 
+// Pointer to the row that is currently at the top of the screen
+int rowOffset = 0;
+
 var editorRows = <String>[];
 
 void initEditor() {}
@@ -57,7 +60,7 @@ void editorDrawRows() {
       }
     } else {
       // trim as necessary so this line doesn't fall off the edge of the screen
-      console.write(trimStringToWindowWidth(editorRows[0]));
+      console.write(trimStringToWindowWidth(editorRows[row]));
     }
     console.clearToLineEnd();
 
