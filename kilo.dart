@@ -10,7 +10,7 @@ const controlQ = 0x11;
 // Cursor location relative to screen
 int cCol = 0, cRow = 0;
 
-var editorRows = [];
+var editorRows = <String>[];
 
 void initEditor() {}
 
@@ -22,20 +22,26 @@ void die(String message) {
   exit(1);
 }
 
+String trimStringToWindowWidth(String text) {
+  if (console.windowWidth < text.length) {
+    text = text.substring(0, console.windowWidth);
+  }
+  return text;
+}
+
 // file i/o
-void editorOpen() {
-  editorRows.add('Hello world!');
+void editorOpen(String filename) {
+  final file = File(filename);
+  editorRows = file.readAsLinesSync();
 }
 
 // output
 void editorDrawRows() {
-  for (int y = 0; y < console.windowHeight; y++) {
-    if (y >= editorRows.length) {
-      if (y == (console.windowHeight / 3).round()) {
-        var welcomeMessage = 'Kilo editor -- version $kiloVersion';
-        if (console.windowWidth < welcomeMessage.length) {
-          welcomeMessage = welcomeMessage.substring(0, console.windowWidth);
-        }
+  for (int row = 0; row < console.windowHeight; row++) {
+    if (row >= editorRows.length) {
+      if (editorRows.isEmpty && (row == (console.windowHeight / 3).round())) {
+        final welcomeMessage =
+            trimStringToWindowWidth('Kilo editor -- version $kiloVersion');
         int padding =
             ((console.windowWidth - welcomeMessage.length) / 2).round();
         if (padding > 0) {
@@ -49,13 +55,14 @@ void editorDrawRows() {
       } else {
         console.write('~');
       }
-      console.clearToLineEnd();
-
-      if (y < console.windowHeight - 1) {
-        console.write('\r\n');
-      }
     } else {
-      console.write(editorRows[0]);
+      // trim as necessary so this line doesn't fall off the edge of the screen
+      console.write(trimStringToWindowWidth(editorRows[0]));
+    }
+    console.clearToLineEnd();
+
+    if (row < console.windowHeight - 1) {
+      console.write('\r\n');
     }
   }
 }
@@ -134,7 +141,7 @@ void editorProcessKeypress() {
 main(List<String> arguments) {
   console.enableRawMode();
   initEditor();
-  editorOpen();
+  if (arguments.isNotEmpty) editorOpen(arguments[0]);
 
   while (true) {
     editorRefreshScreen();
