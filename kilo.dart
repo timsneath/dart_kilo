@@ -22,7 +22,7 @@ void initEditor() {}
 void die(String message) {
   console.clearScreen();
   console.resetCursorPosition();
-  console.disableRawMode();
+  console.rawMode = false;
   console.write(message);
   exit(1);
 }
@@ -177,7 +177,7 @@ void editorProcessKeypress() {
       case ControlCharacter.ctrlQ:
         console.clearScreen();
         console.resetCursorPosition();
-        console.disableRawMode();
+        console.rawMode = false;
         exit(0);
         break;
       case ControlCharacter.arrowLeft:
@@ -197,7 +197,7 @@ void editorProcessKeypress() {
 
 main(List<String> arguments) {
   try {
-    console.enableRawMode();
+    console.rawMode = true;
     initEditor();
     if (arguments.isNotEmpty) editorOpen(arguments[0]);
 
@@ -206,7 +206,8 @@ main(List<String> arguments) {
       editorProcessKeypress();
     }
   } catch (exception) {
-    console.disableRawMode();
+    // Make sure raw mode gets disabled if we hit some unrelated problem
+    console.rawMode = false;
     rethrow;
   }
 }
