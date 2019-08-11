@@ -32,8 +32,11 @@ int screenFileRowOffset = 0;
 // The column in the row that is currently on the left of the screen
 int screenRowColOffset = 0;
 
-// Allow a line for the status bar
-final editorWindowHeight = console.windowHeight - 1;
+// Allow lines for the status bar and message bar
+final editorWindowHeight = console.windowHeight - 3;
+
+String messageText = '';
+DateTime messageTimestamp;
 
 void initEditor() {}
 
@@ -157,6 +160,14 @@ void editorDrawStatusBar() {
       '$rightString');
 
   console.resetColorAttributes();
+  console.writeLine();
+}
+
+void editorDrawMessageBar() {
+  if (DateTime.now().difference(messageTimestamp) < Duration(seconds: 5)) {
+    console.writeLine(truncateString(messageText, console.windowWidth)
+        .padRight(console.windowWidth));
+  }
 }
 
 void editorRefreshScreen() {
@@ -167,10 +178,16 @@ void editorRefreshScreen() {
 
   editorDrawRows();
   editorDrawStatusBar();
+  editorDrawMessageBar();
 
   console.cursorPosition = Coordinate(
       cursorRow - screenFileRowOffset, cursorRenderCol - screenRowColOffset);
   console.showCursor();
+}
+
+void editorSetStatusMessage(String message) {
+  messageText = message;
+  messageTimestamp = DateTime.now();
 }
 
 // input
@@ -262,6 +279,8 @@ main(List<String> arguments) {
       editedFile = arguments[0];
       editorOpen(editedFile);
     }
+
+    editorSetStatusMessage('HELP: Ctrl-Q = quit');
 
     while (true) {
       editorRefreshScreen();
