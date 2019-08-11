@@ -6,16 +6,32 @@ import 'package:dart_console/dart_console.dart';
 final console = Console();
 
 const kiloVersion = '0.0.1';
+const kiloTabStopLength = 8;
+
+// We keep two copies of the file contents, as follows:
+//
+// fileRows represents the actual contents of the document
+//
+// renderRows represents what we'll render on screen. This may be different to
+// the actual contents of the file. For example, tabs are rendered as a series
+// of spaces even though they are only one character; control characters may
+// be shown in some form in the future.
+var fileRows = <String>[];
+var renderRows = <String>[];
 
 // Cursor location relative to file (not the screen)
 int cursorCol = 0, cursorRow = 0;
+
+// Also store cursor column position relative to the rendered row
+int cursorRenderCol = 0;
 
 // The row in the file that is currently at the top of the screen
 int screenFileRowOffset = 0;
 // The column in the row that is currently on the left of the screen
 int screenRowColOffset = 0;
 
-var editorRows = <String>[];
+// Allow a line for the status bar
+final editorWindowHeight = console.windowHeight - 1;
 
 void initEditor() {}
 
@@ -33,40 +49,64 @@ String truncateString(String text, int length) =>
 // file i/o
 void editorOpen(String filename) {
   final file = File(filename);
-  editorRows = file.readAsLinesSync();
+  fileRows = file.readAsLinesSync();
+
+  for (var row in fileRows) {
+    row.replaceAll('\t', ' ' * kiloTabStopLength);
+    renderRows.add(row);
+  }
+
+  assert(fileRows.length == renderRows.length);
 }
 
 // output
+int getRenderedCol(int fileRow, int fileCol) {
+  int col = 0;
+  String row = fileRows[fileRow];
+  for (var i = 0; i < fileCol; i++) {
+    if (row[i] == '\t') {
+      col += (kiloTabStopLength - 1) - (col % kiloTabStopLength);
+    }
+    col++;
+  }
+  return col;
+}
+
 void editorScroll() {
+  cursorRenderCol = 0;
+
+  if (cursorRow < fileRows.length) {
+    cursorRenderCol = getRenderedCol(cursorRow, cursorCol);
+  }
+
   if (cursorRow < screenFileRowOffset) {
     screenFileRowOffset = cursorRow;
   }
 
-  if (cursorRow >= screenFileRowOffset + console.windowHeight) {
-    screenFileRowOffset = cursorRow - console.windowHeight + 1;
+  if (cursorRow >= screenFileRowOffset + editorWindowHeight) {
+    screenFileRowOffset = cursorRow - editorWindowHeight + 1;
   }
 
-  if (cursorCol < screenRowColOffset) {
-    screenRowColOffset = cursorCol;
+  if (cursorRenderCol < screenRowColOffset) {
+    screenRowColOffset = cursorRenderCol;
   }
 
-  if (cursorCol >= screenRowColOffset + console.windowWidth) {
-    screenRowColOffset = cursorCol - console.windowWidth + 1;
+  if (cursorRenderCol >= screenRowColOffset + editorWindowHeight) {
+    screenRowColOffset = cursorRenderCol - editorWindowHeight + 1;
   }
 }
 
 void editorDrawRows() {
   final screenBuffer = StringBuffer();
 
-  for (int screenRow = 0; screenRow < console.windowHeight; screenRow++) {
+  for (int screenRow = 0; screenRow < editorWindowHeight; screenRow++) {
     // fileRow is the row of the file we want to print to screenRow
     final fileRow = screenFileRowOffset + screenRow;
 
     // If we're beyond the text buffer, print tilde in column 0
-    if (fileRow >= editorRows.length) {
+    if (fileRow >= fileRows.length) {
       // Show a welcome message
-      if (editorRows.isEmpty &&
-          (screenRow == (console.windowHeight / 3).round())) {
+      if (fileRows.isEmpty && (screenRow == (editorWindowHeight / 3).round())) {
         // Print the welcome message centered a third of the way down the screen
         final welcomeMessage = truncateString(
             'Kilo editor -- version $kiloVersion', console.windowWidth);
@@ -88,21 +128,23 @@ void editorDrawRows() {
     // Otherwise print the onscreen portion of the current file row,
     // trimmed if necessary
     else {
-      if (editorRows[fileRow].length - screenRowColOffset > 0) {
+      if (fileRows[fileRow].length - screenRowColOffset > 0) {
         screenBuffer.write(truncateString(
-            editorRows[fileRow].substring(screenRowColOffset),
+            fileRows[fileRow].substring(screenRowColOffset),
             console.windowWidth));
       }
     }
 
-    // We're in raw mode, so we have to perform 'return to row 0' and 'line
-    // feed' separately
-    if (screenRow < console.windowHeight - 1) {
-      screenBuffer.write('\r\n');
-    }
+    screenBuffer.write(console.newLine);
   }
 
   console.write(screenBuffer.toString());
+}
+
+void editorDrawStatusBar() {
+  console.setTextStyle(inverted: true);
+  console.write("<<< STATUS BAR >>>".padRight(console.windowWidth));
+  console.resetColorAttributes();
 }
 
 void editorRefreshScreen() {
@@ -112,9 +154,10 @@ void editorRefreshScreen() {
   console.clearScreen();
 
   editorDrawRows();
+  editorDrawStatusBar();
 
   console.cursorPosition = Coordinate(
-      cursorRow - screenFileRowOffset, cursorCol - screenRowColOffset);
+      cursorRow - screenFileRowOffset, cursorRenderCol - screenRowColOffset);
   console.showCursor();
 }
 
@@ -126,14 +169,14 @@ void editorMoveCursor(ControlCharacter key) {
         cursorCol--;
       } else if (cursorRow > 0) {
         cursorRow--;
-        cursorCol = editorRows[cursorRow].length;
+        cursorCol = fileRows[cursorRow].length;
       }
       break;
     case ControlCharacter.arrowRight:
-      if (cursorRow < editorRows.length) {
-        if (cursorCol < editorRows[cursorRow].length) {
+      if (cursorRow < fileRows.length) {
+        if (cursorCol < fileRows[cursorRow].length) {
           cursorCol++;
-        } else if (cursorCol == editorRows[cursorRow].length) {
+        } else if (cursorCol == fileRows[cursorRow].length) {
           cursorCol = 0;
           cursorRow++;
         }
@@ -143,15 +186,17 @@ void editorMoveCursor(ControlCharacter key) {
       if (cursorRow != 0) cursorRow--;
       break;
     case ControlCharacter.arrowDown:
-      if (cursorRow < editorRows.length) cursorRow++;
+      if (cursorRow < fileRows.length) cursorRow++;
       break;
     case ControlCharacter.pageUp:
-      for (var i = 0; i < console.windowHeight; i++) {
+      cursorRow = screenFileRowOffset;
+      for (var i = 0; i < editorWindowHeight; i++) {
         editorMoveCursor(ControlCharacter.arrowUp);
       }
       break;
     case ControlCharacter.pageDown:
-      for (var i = 0; i < console.windowHeight; i++) {
+      cursorRow = screenFileRowOffset + editorWindowHeight - 1;
+      for (var i = 0; i < editorWindowHeight; i++) {
         editorMoveCursor(ControlCharacter.arrowDown);
       }
       break;
@@ -159,13 +204,15 @@ void editorMoveCursor(ControlCharacter key) {
       cursorCol = 0;
       break;
     case ControlCharacter.end:
-      cursorCol = console.windowWidth - 1;
+      if (cursorRow < fileRows.length) {
+        cursorCol = fileRows[cursorRow].length;
+      }
       break;
     default:
   }
 
-  if (cursorRow < editorRows.length) {
-    cursorCol = min(cursorCol, editorRows[cursorRow].length);
+  if (cursorRow < fileRows.length) {
+    cursorCol = min(cursorCol, fileRows[cursorRow].length);
   }
 }
 
