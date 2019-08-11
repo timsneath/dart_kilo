@@ -8,6 +8,8 @@ final console = Console();
 const kiloVersion = '0.0.1';
 const kiloTabStopLength = 8;
 
+String editedFile = '';
+
 // We keep two copies of the file contents, as follows:
 //
 // fileRows represents the actual contents of the document
@@ -143,7 +145,17 @@ void editorDrawRows() {
 
 void editorDrawStatusBar() {
   console.setTextStyle(inverted: true);
-  console.write("<<< STATUS BAR >>>".padRight(console.windowWidth));
+
+  final leftString =
+      '${truncateString(editedFile.isEmpty ? "[No Name]" : editedFile, 20)}'
+      ' - ${fileRows.length} lines';
+  final rightString = '${cursorRow + 1}/${fileRows.length}';
+  final padding = console.windowWidth - leftString.length - rightString.length;
+
+  console.write('$leftString'
+      '${" " * padding}'
+      '$rightString');
+
   console.resetColorAttributes();
 }
 
@@ -246,7 +258,10 @@ main(List<String> arguments) {
   try {
     console.rawMode = true;
     initEditor();
-    if (arguments.isNotEmpty) editorOpen(arguments[0]);
+    if (arguments.isNotEmpty) {
+      editedFile = arguments[0];
+      editorOpen(editedFile);
+    }
 
     while (true) {
       editorRefreshScreen();
