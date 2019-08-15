@@ -1,3 +1,5 @@
+[![Language](https://img.shields.io/badge/language-Dart-blue.svg)](https://dart.dev)
+
 An initial attempt at a Dart port of the [Kilo text editor][kilo]. Primarily
 built as a test harness for the [`dart_console`][dart_console] package, which
 is itself at an early stage of development. 
