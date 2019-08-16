@@ -150,7 +150,7 @@ void editorDrawStatusBar() {
   console.setTextStyle(inverted: true);
 
   final leftString =
-      '${truncateString(editedFile.isEmpty ? "[No Name]" : editedFile, 20)}'
+      '${truncateString(editedFile.isEmpty ? "[No Name]" : editedFile, (console.windowWidth / 2).ceil())}'
       ' - ${fileRows.length} lines';
   final rightString = '${cursorRow + 1}/${fileRows.length}';
   final padding = console.windowWidth - leftString.length - rightString.length;
