@@ -8,7 +8,7 @@ final console = Console();
 const kiloVersion = '0.0.1';
 const kiloTabStopLength = 8;
 
-String editedFile = '';
+String editedFilename = '';
 
 // We keep two copies of the file contents, as follows:
 //
@@ -51,10 +51,22 @@ void die(String message) {
 String truncateString(String text, int length) =>
     length < text.length ? text.substring(0, length) : text;
 
+// editor operations
+void editorInsertChar(String char) {
+  if (cursorRow == fileRows.length) {
+    fileRows.add(char);
+  } else {
+    fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol) +
+        char +
+        fileRows[cursorRow].substring(cursorCol);
+  }
+  cursorCol++;
+}
+
 // file i/o
 void editorOpen(String filename) {
   final file = File(filename);
-  fileRows = file.readAsLinesSync();
+  fileRows = file.readAsLinesSync(); // TODO: error handling
 
   for (var row in fileRows) {
     row.replaceAll('\t', ' ' * kiloTabStopLength);
@@ -62,6 +74,22 @@ void editorOpen(String filename) {
   }
 
   assert(fileRows.length == renderRows.length);
+}
+
+void editorSave() async {
+  // TODO: prompt user for filename
+  if (editedFilename.isEmpty) {
+    editorSetStatusMessage('File is null');
+    return;
+  }
+
+  // TODO: This is hopelessly naive, as with kilo.c. We should write to a
+  //    temporary file and rename to ensure that we have written successfully.
+  final file = File(editedFilename);
+  final fileContents = fileRows.join('\n');
+  file.writeAsStringSync(fileContents);
+
+  editorSetStatusMessage('${fileContents.length} bytes written to disk.');
 }
 
 // output
@@ -150,7 +178,7 @@ void editorDrawStatusBar() {
   console.setTextStyle(inverted: true);
 
   final leftString =
-      '${truncateString(editedFile.isEmpty ? "[No Name]" : editedFile, (console.windowWidth / 2).ceil())}'
+      '${truncateString(editedFilename.isEmpty ? "[No Name]" : editedFilename, (console.windowWidth / 2).ceil())}'
       ' - ${fileRows.length} lines';
   final rightString = '${cursorRow + 1}/${fileRows.length}';
   final padding = console.windowWidth - leftString.length - rightString.length;
@@ -256,6 +284,23 @@ void editorProcessKeypress() {
         console.rawMode = false;
         exit(0);
         break;
+      case ControlCharacter.ctrlS:
+        editorSave();
+        break;
+      case ControlCharacter.backspace:
+      case ControlCharacter.ctrlH:
+        // TODO
+        break;
+      case ControlCharacter.ctrlL:
+        // TODO
+        break;
+        break;
+      case ControlCharacter.delete:
+        // TODO
+        break;
+      case ControlCharacter.enter:
+        // TODO
+        break;
       case ControlCharacter.arrowLeft:
       case ControlCharacter.arrowUp:
       case ControlCharacter.arrowRight:
@@ -268,6 +313,8 @@ void editorProcessKeypress() {
         break;
       default:
     }
+  } else {
+    editorInsertChar(key.char);
   }
 }
 
@@ -276,11 +323,11 @@ main(List<String> arguments) {
     console.rawMode = true;
     initEditor();
     if (arguments.isNotEmpty) {
-      editedFile = arguments[0];
-      editorOpen(editedFile);
+      editedFilename = arguments[0];
+      editorOpen(editedFilename);
     }
 
-    editorSetStatusMessage('HELP: Ctrl-Q = quit');
+    editorSetStatusMessage('HELP: Ctrl-S = save | Ctrl-Q = quit');
 
     while (true) {
       editorRefreshScreen();

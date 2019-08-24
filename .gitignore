@@ -8,3 +8,4 @@ build/
 **/*.dylib
 **/*.dll
 kilo
+testfile2
