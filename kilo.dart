@@ -43,7 +43,7 @@ void initEditor() {
   isFileDirty = false;
 }
 
-void die(String message) {
+void crash(String message) {
   console.clearScreen();
   console.resetCursorPosition();
   console.rawMode = false;
@@ -114,16 +114,18 @@ void editorOpen(String filename) {
 }
 
 void editorSave() async {
-  // TODO: prompt user for filename
   if (editedFilename.isEmpty) {
-    editorSetStatusMessage('File is null');
-    return;
+    editedFilename = editorPrompt('Save as: ');
+    if (editedFilename.isEmpty) {
+      editorSetStatusMessage('Save aborted.');
+      return;
+    }
   }
 
   // TODO: This is hopelessly naive, as with kilo.c. We should write to a
   //    temporary file and rename to ensure that we have written successfully.
   final file = File(editedFilename);
-  final fileContents = fileRows.join('\n');
+  final fileContents = fileRows.join('\n') + '\n';
   file.writeAsStringSync(fileContents);
 
   isFileDirty = false;
@@ -274,6 +276,21 @@ void editorRefreshScreen() {
 void editorSetStatusMessage(String message) {
   messageText = message;
   messageTimestamp = DateTime.now();
+}
+
+String editorPrompt(String message) {
+  final originalCursorRow = cursorRow;
+
+  editorSetStatusMessage(message);
+  editorRefreshScreen();
+  // TODO: Bug -- text is not being printed to last line
+  console.cursorPosition = Coordinate(console.windowHeight - 2, message.length);
+
+  // TODO: Replace this with console.readLine (because Ctrl+C will exit)
+  final response = stdin.readLineSync(retainNewlines: false);
+  cursorRow = originalCursorRow;
+
+  return response;
 }
 
 // input
