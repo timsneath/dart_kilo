@@ -4,10 +4,10 @@ packages:
   dart_console:
     dependency: "direct main"
     description:
-      name: dart_console
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.0+3"
+      path: "../dart_console"
+      relative: true
+    source: path
+    version: "0.2.0"
   pedantic:
     dependency: "direct dev"
     description:

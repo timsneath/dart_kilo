@@ -7,7 +7,8 @@ environment:
   sdk: '>=2.4.0 <3.0.0'
 
 dependencies:
-  dart_console: ^0.1.0+3
+  dart_console: 
+    path: ../dart_console
 
 dev_dependencies:
   pedantic: ^1.8.0+1

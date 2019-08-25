@@ -286,8 +286,7 @@ String editorPrompt(String message) {
   // TODO: Bug -- text is not being printed to last line
   console.cursorPosition = Coordinate(console.windowHeight - 2, message.length);
 
-  // TODO: Replace this with console.readLine (because Ctrl+C will exit)
-  final response = stdin.readLineSync(retainNewlines: false);
+  final response = console.readLine(cancelOnBreak: false);
   cursorRow = originalCursorRow;
 
   return response;
