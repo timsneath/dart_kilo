@@ -3,7 +3,7 @@ import 'dart:math' show min;
 
 import 'package:dart_console/dart_console.dart';
 
-const kiloVersion = '0.0.1';
+const kiloVersion = '0.0.2';
 const kiloTabStopLength = 8;
 
 final console = Console();
@@ -98,10 +98,28 @@ void editorInsertNewline() {
   cursorCol = 0;
 }
 
+void editorFind() {
+  // TODO: Implement ESC control key
+  final query = editorPrompt('Search (ESC to cancel): ');
+
+  for (var row = 0; row < fileRows.length; row++) {
+    if (fileRows[row].contains(query)) {
+      console.cursorPosition = Coordinate(row, fileRows[row].indexOf(query));
+      screenFileRowOffset = fileRows.length;
+      break;
+    }
+  }
+}
+
 // file i/o
 void editorOpen(String filename) {
   final file = File(filename);
-  fileRows = file.readAsLinesSync(); // TODO: error handling
+  try {
+    fileRows = file.readAsLinesSync();
+  } on FileSystemException catch (e) {
+    editorSetStatusMessage('Error opening file: $e');
+    return;
+  }
 
   for (var row in fileRows) {
     row.replaceAll('\t', ' ' * kiloTabStopLength);
@@ -358,6 +376,9 @@ void editorProcessKeypress() {
       case ControlCharacter.ctrlS:
         editorSave();
         break;
+      case ControlCharacter.ctrlF:
+        editorFind();
+        break;
       case ControlCharacter.backspace:
       case ControlCharacter.ctrlH:
         editorBackspaceChar();
@@ -395,7 +416,8 @@ main(List<String> arguments) {
       editorOpen(editedFilename);
     }
 
-    editorSetStatusMessage('HELP: Ctrl-S = save | Ctrl-Q = quit');
+    editorSetStatusMessage(
+        'HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find');
 
     while (true) {
       editorRefreshScreen();
