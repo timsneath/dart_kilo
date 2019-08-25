@@ -3,12 +3,13 @@ import 'dart:math' show min;
 
 import 'package:dart_console/dart_console.dart';
 
-final console = Console();
-
 const kiloVersion = '0.0.1';
 const kiloTabStopLength = 8;
 
+final console = Console();
+
 String editedFilename = '';
+bool isFileDirty;
 
 // We keep two copies of the file contents, as follows:
 //
@@ -38,7 +39,9 @@ final editorWindowHeight = console.windowHeight - 3;
 String messageText = '';
 DateTime messageTimestamp;
 
-void initEditor() {}
+void initEditor() {
+  isFileDirty = false;
+}
 
 void die(String message) {
   console.clearScreen();
@@ -61,6 +64,38 @@ void editorInsertChar(String char) {
         fileRows[cursorRow].substring(cursorCol);
   }
   cursorCol++;
+  isFileDirty = true;
+}
+
+void editorBackspaceChar() {
+  // If we're past the end of the file, then there's nothing to delete
+  if (cursorRow == fileRows.length) return;
+
+  // Nothing to do if we're at the first character of the file
+  if (cursorCol == 0 && cursorRow == 0) return;
+
+  if (cursorCol > 0) {
+    fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol - 1) +
+        fileRows[cursorRow].substring(cursorCol);
+    cursorCol--;
+    isFileDirty = true;
+  } else {
+    // delete the carriage return by appending the current line to the previous
+    // one and then removing the current line altogether.
+    fileRows[cursorRow - 1] += fileRows[cursorRow];
+    fileRows.removeAt(cursorRow);
+  }
+}
+
+void editorInsertNewline() {
+  if (cursorCol == 0) {
+    fileRows.insert(cursorRow, '');
+  } else {
+    fileRows.insert(cursorRow + 1, fileRows[cursorRow].substring(cursorCol));
+    fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol - 1);
+  }
+  cursorRow++;
+  cursorCol = 0;
 }
 
 // file i/o
@@ -74,6 +109,8 @@ void editorOpen(String filename) {
   }
 
   assert(fileRows.length == renderRows.length);
+
+  isFileDirty = false;
 }
 
 void editorSave() async {
@@ -89,7 +126,27 @@ void editorSave() async {
   final fileContents = fileRows.join('\n');
   file.writeAsStringSync(fileContents);
 
+  isFileDirty = false;
+
   editorSetStatusMessage('${fileContents.length} bytes written to disk.');
+}
+
+void editorQuit() {
+  if (isFileDirty) {
+    editorSetStatusMessage('File is unsaved. Quit anyway (y or n)?');
+    editorRefreshScreen();
+    Key response = console.readKey();
+    if (response.char != 'y' && response.char != 'Y') {
+      {
+        editorSetStatusMessage('');
+        return;
+      }
+    }
+  }
+  console.clearScreen();
+  console.resetCursorPosition();
+  console.rawMode = false;
+  exit(0);
 }
 
 // output
@@ -134,7 +191,7 @@ void editorDrawRows() {
 
   for (int screenRow = 0; screenRow < editorWindowHeight; screenRow++) {
     // fileRow is the row of the file we want to print to screenRow
-    final fileRow = screenFileRowOffset + screenRow;
+    final fileRow = screenRow + screenFileRowOffset;
 
     // If we're beyond the text buffer, print tilde in column 0
     if (fileRow >= fileRows.length) {
@@ -177,9 +234,10 @@ void editorDrawRows() {
 void editorDrawStatusBar() {
   console.setTextStyle(inverted: true);
 
-  final leftString =
+  var leftString =
       '${truncateString(editedFilename.isEmpty ? "[No Name]" : editedFilename, (console.windowWidth / 2).ceil())}'
       ' - ${fileRows.length} lines';
+  if (isFileDirty) leftString += ' (modified)';
   final rightString = '${cursorRow + 1}/${fileRows.length}';
   final padding = console.windowWidth - leftString.length - rightString.length;
 
@@ -279,27 +337,21 @@ void editorProcessKeypress() {
   if (key.isControl) {
     switch (key.controlChar) {
       case ControlCharacter.ctrlQ:
-        console.clearScreen();
-        console.resetCursorPosition();
-        console.rawMode = false;
-        exit(0);
+        editorQuit();
         break;
       case ControlCharacter.ctrlS:
         editorSave();
         break;
       case ControlCharacter.backspace:
       case ControlCharacter.ctrlH:
-        // TODO
-        break;
-      case ControlCharacter.ctrlL:
-        // TODO
-        break;
+        editorBackspaceChar();
         break;
       case ControlCharacter.delete:
-        // TODO
+        editorMoveCursor(ControlCharacter.arrowRight);
+        editorBackspaceChar();
         break;
       case ControlCharacter.enter:
-        // TODO
+        editorInsertNewline();
         break;
       case ControlCharacter.arrowLeft:
       case ControlCharacter.arrowUp:
