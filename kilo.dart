@@ -35,6 +35,7 @@ int screenRowColOffset = 0;
 
 // Allow lines for the status bar and message bar
 final editorWindowHeight = console.windowHeight - 3;
+final editorWindowWidth = console.windowWidth;
 
 String messageText = '';
 DateTime messageTimestamp;
@@ -58,11 +59,13 @@ String truncateString(String text, int length) =>
 void editorInsertChar(String char) {
   if (cursorRow == fileRows.length) {
     fileRows.add(char);
+    renderRows.add(char);
   } else {
     fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol) +
         char +
         fileRows[cursorRow].substring(cursorCol);
   }
+  editorUpdateRenderRow(cursorRow);
   cursorCol++;
   isFileDirty = true;
 }
@@ -77,22 +80,30 @@ void editorBackspaceChar() {
   if (cursorCol > 0) {
     fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol - 1) +
         fileRows[cursorRow].substring(cursorCol);
+    editorUpdateRenderRow(cursorRow);
     cursorCol--;
     isFileDirty = true;
   } else {
     // delete the carriage return by appending the current line to the previous
     // one and then removing the current line altogether.
     fileRows[cursorRow - 1] += fileRows[cursorRow];
+    editorUpdateRenderRow(cursorRow - 1);
     fileRows.removeAt(cursorRow);
+    renderRows.removeAt(cursorRow);
   }
 }
 
 void editorInsertNewline() {
   if (cursorCol == 0) {
     fileRows.insert(cursorRow, '');
+    renderRows.insert(cursorRow, '');
   } else {
     fileRows.insert(cursorRow + 1, fileRows[cursorRow].substring(cursorCol));
     fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol - 1);
+
+    renderRows.insert(cursorRow + 1, '');
+    editorUpdateRenderRow(cursorRow);
+    editorUpdateRenderRow(cursorRow + 1);
   }
   cursorRow++;
   cursorCol = 0;
@@ -101,10 +112,10 @@ void editorInsertNewline() {
 void editorFind() {
   final query = editorPrompt('Search (ESC to cancel): ');
   if (query.isNotEmpty) {
-    for (var row = 0; row < fileRows.length; row++) {
-      if (fileRows[row].contains(query)) {
+    for (var row = 0; row < renderRows.length; row++) {
+      if (renderRows[row].contains(query)) {
         cursorRow = row;
-        cursorCol = fileRows[row].indexOf(query);
+        cursorCol = getFileCol(row, renderRows[row].indexOf(query));
         screenFileRowOffset = fileRows.length;
         break;
       }
@@ -122,9 +133,9 @@ void editorOpen(String filename) {
     return;
   }
 
-  for (var row in fileRows) {
-    row.replaceAll('\t', ' ' * kiloTabStopLength);
-    renderRows.add(row);
+  for (int rowIndex = 0; rowIndex < fileRows.length; rowIndex++) {
+    renderRows.add('');
+    editorUpdateRenderRow(rowIndex);
   }
 
   assert(fileRows.length == renderRows.length);
@@ -171,16 +182,60 @@ void editorQuit() {
 }
 
 // output
+
+// Takes a column in a given row of the file and converts it to the rendered
+// column. For example, if the file contains \t\tFoo and tab stops are
+// configured to display as eight spaces, the 'F' should display as rendered
+// column 16 even though it is only the third character in the file.
 int getRenderedCol(int fileRow, int fileCol) {
   int col = 0;
-  String row = fileRows[fileRow];
+  String rowText = fileRows[fileRow];
   for (var i = 0; i < fileCol; i++) {
-    if (row[i] == '\t') {
+    if (rowText[i] == '\t') {
       col += (kiloTabStopLength - 1) - (col % kiloTabStopLength);
     }
     col++;
   }
   return col;
+}
+
+// Inversion of the getRenderedCol method. Converts a rendered column index
+// into its corresponding position in the file.
+int getFileCol(int row, int renderCol) {
+  int currentRenderCol = 0;
+  int fileCol;
+  String rowText = fileRows[row];
+  for (fileCol = 0; fileCol < rowText.length; fileCol++) {
+    if (rowText[fileCol] == '\t') {
+      currentRenderCol +=
+          (kiloTabStopLength - 1) - (currentRenderCol % kiloTabStopLength);
+    }
+    currentRenderCol++;
+
+    if (currentRenderCol > renderCol) return fileCol;
+  }
+  return fileCol;
+}
+
+void editorUpdateRenderRow(int rowIndex) {
+  assert(renderRows.length == fileRows.length);
+
+  String renderBuffer = '';
+  final fileRow = fileRows[rowIndex];
+
+  for (int fileCol = 0; fileCol < fileRow.length; fileCol++) {
+    if (fileRow[fileCol] == '\t') {
+      // Add at least one space for the tab stop, plus as many more as needed to
+      // get to the next tab stop
+      renderBuffer += ' ';
+      while (renderBuffer.length % kiloTabStopLength != 0) {
+        renderBuffer += ' ';
+      }
+    } else {
+      renderBuffer += fileRow[fileCol];
+    }
+    renderRows[rowIndex] = renderBuffer;
+  }
 }
 
 void editorScroll() {
@@ -202,8 +257,8 @@ void editorScroll() {
     screenRowColOffset = cursorRenderCol;
   }
 
-  if (cursorRenderCol >= screenRowColOffset + editorWindowHeight) {
-    screenRowColOffset = cursorRenderCol - editorWindowHeight + 1;
+  if (cursorRenderCol >= screenRowColOffset + editorWindowWidth) {
+    screenRowColOffset = cursorRenderCol - editorWindowWidth + 1;
   }
 }
 
@@ -239,10 +294,10 @@ void editorDrawRows() {
     // Otherwise print the onscreen portion of the current file row,
     // trimmed if necessary
     else {
-      if (fileRows[fileRow].length - screenRowColOffset > 0) {
+      if (renderRows[fileRow].length - screenRowColOffset > 0) {
         screenBuffer.write(truncateString(
-            fileRows[fileRow].substring(screenRowColOffset),
-            console.windowWidth));
+            renderRows[fileRow].substring(screenRowColOffset),
+            editorWindowWidth));
       }
     }
 
@@ -400,6 +455,12 @@ void editorProcessKeypress() {
       case ControlCharacter.home:
       case ControlCharacter.end:
         editorMoveCursor(key.controlChar);
+        break;
+      case ControlCharacter.ctrlA:
+        editorMoveCursor(ControlCharacter.home);
+        break;
+      case ControlCharacter.ctrlE:
+        editorMoveCursor(ControlCharacter.end);
         break;
       default:
     }
