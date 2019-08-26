@@ -1,8 +1,11 @@
 Here is a string that is more than 120 characters long. Here is a string that is more than 120 characters long. Here is a string that is more than 120 characters long.
 
-Normal text
-	Indented text with tabs
-		Doubly-indented text with tabs
+Outline
+1. 	Indented text with tabs
+	This text should be aligned with the previous one
+	
+	a)	More text
+		This text should be aligned with the previous one
 
 Normal text
     Indented text with spaces

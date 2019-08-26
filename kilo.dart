@@ -4,7 +4,7 @@ import 'dart:math' show min;
 import 'package:dart_console/dart_console.dart';
 
 const kiloVersion = '0.0.2';
-const kiloTabStopLength = 8;
+const kiloTabStopLength = 4;
 
 final console = Console();
 
