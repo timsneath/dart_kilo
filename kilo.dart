@@ -99,14 +99,15 @@ void editorInsertNewline() {
 }
 
 void editorFind() {
-  // TODO: Implement ESC control key
   final query = editorPrompt('Search (ESC to cancel): ');
-
-  for (var row = 0; row < fileRows.length; row++) {
-    if (fileRows[row].contains(query)) {
-      console.cursorPosition = Coordinate(row, fileRows[row].indexOf(query));
-      screenFileRowOffset = fileRows.length;
-      break;
+  if (query.isNotEmpty) {
+    for (var row = 0; row < fileRows.length; row++) {
+      if (fileRows[row].contains(query)) {
+        cursorRow = row;
+        cursorCol = fileRows[row].indexOf(query);
+        screenFileRowOffset = fileRows.length;
+        break;
+      }
     }
   }
 }
@@ -304,7 +305,7 @@ String editorPrompt(String message) {
   // TODO: Bug -- text is not being printed to last line
   console.cursorPosition = Coordinate(console.windowHeight - 2, message.length);
 
-  final response = console.readLine(cancelOnBreak: false);
+  final response = console.readLine(cancelOnEscape: false);
   cursorRow = originalCursorRow;
 
   return response;
