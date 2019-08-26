@@ -90,6 +90,7 @@ void editorBackspaceChar() {
     editorUpdateRenderRow(cursorRow - 1);
     fileRows.removeAt(cursorRow);
     renderRows.removeAt(cursorRow);
+    // TODO: Deleting from col 0 seems to screw up.
   }
 }
 
@@ -109,8 +110,12 @@ void editorInsertNewline() {
   cursorCol = 0;
 }
 
-void editorFind() {
-  final query = editorPrompt('Search (ESC to cancel): ');
+void editorFindCallback(String query, Key key) {
+  if (key.controlChar == ControlCharacter.enter ||
+      key.controlChar == ControlCharacter.escape) {
+    return;
+  }
+
   if (query.isNotEmpty) {
     for (var row = 0; row < renderRows.length; row++) {
       if (renderRows[row].contains(query)) {
@@ -120,6 +125,23 @@ void editorFind() {
         break;
       }
     }
+  }
+}
+
+void editorFind() {
+  var savedCursorCol = cursorCol;
+  var savedCursorRow = cursorRow;
+  var savedScreenFileRowOffset = screenFileRowOffset;
+  var savedScreenRowColOffset = screenRowColOffset;
+
+  final query = editorPrompt('Search (ESC to cancel): ', editorFindCallback);
+
+  if (query.isEmpty) {
+    // Escape pressed
+    cursorCol = savedCursorCol;
+    cursorRow = savedCursorRow;
+    screenFileRowOffset = savedScreenFileRowOffset;
+    screenRowColOffset = savedScreenRowColOffset;
   }
 }
 
@@ -352,7 +374,8 @@ void editorSetStatusMessage(String message) {
   messageTimestamp = DateTime.now();
 }
 
-String editorPrompt(String message) {
+String editorPrompt(String message,
+    [Function(String text, Key lastPressed) callback]) {
   final originalCursorRow = cursorRow;
 
   editorSetStatusMessage(message);
@@ -360,7 +383,7 @@ String editorPrompt(String message) {
   // TODO: Bug -- text is not being printed to last line
   console.cursorPosition = Coordinate(console.windowHeight - 2, message.length);
 
-  final response = console.readLine(cancelOnEscape: false);
+  final response = console.readLine(cancelOnEscape: true);
   cursorRow = originalCursorRow;
 
   return response;
