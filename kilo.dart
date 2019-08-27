@@ -9,7 +9,7 @@ const kiloTabStopLength = 4;
 final console = Console();
 
 String editedFilename = '';
-bool isFileDirty;
+bool isFileDirty = false;
 
 // We keep two copies of the file contents, as follows:
 //
@@ -82,16 +82,17 @@ void editorBackspaceChar() {
         fileRows[cursorRow].substring(cursorCol);
     editorUpdateRenderRow(cursorRow);
     cursorCol--;
-    isFileDirty = true;
   } else {
     // delete the carriage return by appending the current line to the previous
     // one and then removing the current line altogether.
+    cursorCol = fileRows[cursorRow - 1].length;
     fileRows[cursorRow - 1] += fileRows[cursorRow];
     editorUpdateRenderRow(cursorRow - 1);
     fileRows.removeAt(cursorRow);
     renderRows.removeAt(cursorRow);
-    // TODO: Deleting from col 0 seems to screw up.
+    cursorRow--;
   }
+  isFileDirty = true;
 }
 
 void editorInsertNewline() {
@@ -100,7 +101,7 @@ void editorInsertNewline() {
     renderRows.insert(cursorRow, '');
   } else {
     fileRows.insert(cursorRow + 1, fileRows[cursorRow].substring(cursorCol));
-    fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol - 1);
+    fileRows[cursorRow] = fileRows[cursorRow].substring(0, cursorCol);
 
     renderRows.insert(cursorRow + 1, '');
     editorUpdateRenderRow(cursorRow);
@@ -211,6 +212,9 @@ void editorQuit() {
 // column 16 even though it is only the third character in the file.
 int getRenderedCol(int fileRow, int fileCol) {
   int col = 0;
+
+  if (fileRow >= fileRows.length) return 0;
+
   String rowText = fileRows[fileRow];
   for (var i = 0; i < fileCol; i++) {
     if (rowText[i] == '\t') {
@@ -325,13 +329,13 @@ void editorDrawRows() {
 
     screenBuffer.write(console.newLine);
   }
-
   console.write(screenBuffer.toString());
 }
 
 void editorDrawStatusBar() {
   console.setTextStyle(inverted: true);
 
+  // TODO: Displayed filename should not include path.
   var leftString =
       '${truncateString(editedFilename.isEmpty ? "[No Name]" : editedFilename, (console.windowWidth / 2).ceil())}'
       ' - ${fileRows.length} lines';
@@ -349,7 +353,7 @@ void editorDrawStatusBar() {
 
 void editorDrawMessageBar() {
   if (DateTime.now().difference(messageTimestamp) < Duration(seconds: 5)) {
-    console.writeLine(truncateString(messageText, console.windowWidth)
+    console.write(truncateString(messageText, console.windowWidth)
         .padRight(console.windowWidth));
   }
 }
@@ -380,10 +384,11 @@ String editorPrompt(String message,
 
   editorSetStatusMessage(message);
   editorRefreshScreen();
+
   // TODO: Bug -- text is not being printed to last line
   console.cursorPosition = Coordinate(console.windowHeight - 2, message.length);
 
-  final response = console.readLine(cancelOnEscape: true);
+  final response = console.readLine(cancelOnEscape: true, callback: callback);
   cursorRow = originalCursorRow;
 
   return response;
