@@ -3,8 +3,12 @@ import 'dart:math' show min;
 
 import 'package:dart_console/dart_console.dart';
 
-const kiloVersion = '0.0.2';
+const kiloVersion = '0.0.3';
 const kiloTabStopLength = 4;
+
+//
+// GLOBAL VARIABLES
+//
 
 final console = Console();
 
@@ -34,8 +38,15 @@ int screenFileRowOffset = 0;
 int screenRowColOffset = 0;
 
 // Allow lines for the status bar and message bar
-final editorWindowHeight = console.windowHeight - 3;
+final editorWindowHeight = console.windowHeight - 2;
 final editorWindowWidth = console.windowWidth;
+
+// Index of the row last find match was on, or -1 if no match
+int findLastMatchRow = -1;
+
+// Current search direction
+enum FindDirection { forwards, backwards }
+var findDirection = FindDirection.forwards;
 
 String messageText = '';
 DateTime messageTimestamp;
@@ -55,7 +66,9 @@ void crash(String message) {
 String truncateString(String text, int length) =>
     length < text.length ? text.substring(0, length) : text;
 
-// editor operations
+//
+// EDITOR OPERATIONS
+//
 void editorInsertChar(String char) {
   if (cursorRow == fileRows.length) {
     fileRows.add(char);
@@ -114,15 +127,48 @@ void editorInsertNewline() {
 void editorFindCallback(String query, Key key) {
   if (key.controlChar == ControlCharacter.enter ||
       key.controlChar == ControlCharacter.escape) {
+    findLastMatchRow = -1;
+    findDirection = FindDirection.forwards;
     return;
+  } else if (key.controlChar == ControlCharacter.arrowRight ||
+      key.controlChar == ControlCharacter.arrowDown) {
+    findDirection = FindDirection.forwards;
+  } else if (key.controlChar == ControlCharacter.arrowLeft ||
+      key.controlChar == ControlCharacter.arrowUp) {
+    findDirection = FindDirection.backwards;
+  } else {
+    findLastMatchRow = -1;
+    findDirection = FindDirection.forwards;
   }
 
+  if (findLastMatchRow == -1) findDirection = FindDirection.forwards;
+
+  var currentRow = findLastMatchRow;
   if (query.isNotEmpty) {
-    for (var row = 0; row < renderRows.length; row++) {
-      if (renderRows[row].contains(query)) {
-        cursorRow = row;
-        cursorCol = getFileCol(row, renderRows[row].indexOf(query));
+    // we loop through all the rows, rotating back to the beginning/end as
+    // necessary
+    for (var i = 0; i < renderRows.length; i++) {
+      if (findDirection == FindDirection.forwards) {
+        currentRow++;
+      } else {
+        currentRow--;
+      }
+
+      if (currentRow == -1) {
+        currentRow = fileRows.length - 1;
+      } else if (currentRow == fileRows.length) {
+        currentRow = 0;
+      }
+
+      if (renderRows[currentRow].contains(query)) {
+        findLastMatchRow = currentRow;
+        cursorRow = currentRow;
+        cursorCol =
+            getFileCol(currentRow, renderRows[currentRow].indexOf(query));
         screenFileRowOffset = fileRows.length;
+        editorSetStatusMessage(
+            'Search (ESC to cancel, use arrows for prev/next): ' + query);
+        editorRefreshScreen();
         break;
       }
     }
@@ -135,7 +181,8 @@ void editorFind() {
   var savedScreenFileRowOffset = screenFileRowOffset;
   var savedScreenRowColOffset = screenRowColOffset;
 
-  final query = editorPrompt('Search (ESC to cancel): ', editorFindCallback);
+  final query = editorPrompt(
+      'Search (ESC to cancel, use arrows for prev/next): ', editorFindCallback);
 
   if (query.isEmpty) {
     // Escape pressed
@@ -146,7 +193,9 @@ void editorFind() {
   }
 }
 
-// file i/o
+//
+// FILE I/O
+//
 void editorOpen(String filename) {
   final file = File(filename);
   try {
@@ -204,7 +253,9 @@ void editorQuit() {
   exit(0);
 }
 
-// output
+//
+// RENDERING OPERATIONS
+//
 
 // Takes a column in a given row of the file and converts it to the rendered
 // column. For example, if the file contains \t\tFoo and tab stops are
@@ -301,9 +352,8 @@ void editorDrawRows() {
       if (fileRows.isEmpty && (screenRow == (editorWindowHeight / 3).round())) {
         // Print the welcome message centered a third of the way down the screen
         final welcomeMessage = truncateString(
-            'Kilo editor -- version $kiloVersion', console.windowWidth);
-        int padding =
-            ((console.windowWidth - welcomeMessage.length) / 2).round();
+            'Kilo editor -- version $kiloVersion', editorWindowWidth);
+        int padding = ((editorWindowWidth - welcomeMessage.length) / 2).round();
         if (padding > 0) {
           screenBuffer.write('~');
           padding--;
@@ -337,11 +387,11 @@ void editorDrawStatusBar() {
 
   // TODO: Displayed filename should not include path.
   var leftString =
-      '${truncateString(editedFilename.isEmpty ? "[No Name]" : editedFilename, (console.windowWidth / 2).ceil())}'
+      '${truncateString(editedFilename.isEmpty ? "[No Name]" : editedFilename, (editorWindowWidth / 2).ceil())}'
       ' - ${fileRows.length} lines';
   if (isFileDirty) leftString += ' (modified)';
   final rightString = '${cursorRow + 1}/${fileRows.length}';
-  final padding = console.windowWidth - leftString.length - rightString.length;
+  final padding = editorWindowWidth - leftString.length - rightString.length;
 
   console.write('$leftString'
       '${" " * padding}'
@@ -353,8 +403,8 @@ void editorDrawStatusBar() {
 
 void editorDrawMessageBar() {
   if (DateTime.now().difference(messageTimestamp) < Duration(seconds: 5)) {
-    console.write(truncateString(messageText, console.windowWidth)
-        .padRight(console.windowWidth));
+    console.write(truncateString(messageText, editorWindowWidth)
+        .padRight(editorWindowWidth));
   }
 }
 
@@ -385,16 +435,18 @@ String editorPrompt(String message,
   editorSetStatusMessage(message);
   editorRefreshScreen();
 
-  // TODO: Bug -- text is not being printed to last line
-  console.cursorPosition = Coordinate(console.windowHeight - 2, message.length);
+  console.cursorPosition = Coordinate(console.windowHeight - 1, message.length);
 
   final response = console.readLine(cancelOnEscape: true, callback: callback);
   cursorRow = originalCursorRow;
+  editorSetStatusMessage('');
 
   return response;
 }
 
-// input
+//
+// INPUT OPERATIONS
+//
 void editorMoveCursor(ControlCharacter key) {
   switch (key) {
     case ControlCharacter.arrowLeft:
@@ -496,6 +548,10 @@ void editorProcessKeypress() {
     editorInsertChar(key.char);
   }
 }
+
+//
+// ENTRY POINT
+//
 
 main(List<String> arguments) {
   try {
