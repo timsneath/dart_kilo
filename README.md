@@ -4,9 +4,9 @@ An initial attempt at a Dart port of the [Kilo text editor][kilo]. Primarily
 built as a test harness for the [`dart_console`][dart_console] package, which
 is itself at an early stage of development.
 
-## Current status (Aug 25th, 2019)
+## Current status (Aug 27th, 2019)
 
-Basic text viewing and editing capabilities.
+Basic text viewing, editing and searching capabilities.
 
 ```bash
 dart kilo.dart testfile
@@ -17,6 +17,7 @@ dart kilo.dart testfile
 - Arrow keys, page up/down, home/end should all work.
 - Vertical and horizontal scrolling should work.
 - Status bar should show accurate information.
+- Can do forwards or backwards incremental search.
 
 ## About the source project
 
