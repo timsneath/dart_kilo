@@ -4,12 +4,10 @@ version: 0.2.0
 author: Tim Sneath <timsneath@google.com>
 
 environment:
-  sdk: '>=2.4.0 <3.0.0'
+  sdk: '>=2.5.0 <3.0.0'
 
 dependencies:
-  # dart_console: ^0.2.0+1
-  dart_console:
-    path: ../dart_console
+  dart_console: ^0.3.1
 
 dev_dependencies:
   pedantic: ^1.8.0+1
