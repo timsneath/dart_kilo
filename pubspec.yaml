@@ -1,13 +1,13 @@
 name: kilo
 description: A basic console text editor written in Dart.
-version: 0.2.0
+version: 0.2.1
 author: Tim Sneath <timsneath@google.com>
 
 environment:
-  sdk: '>=2.5.0 <3.0.0'
+  sdk: '>=2.7.0 <3.0.0'
 
 dependencies:
-  dart_console: ^0.3.1
+  dart_console: ^0.6.2
 
 dev_dependencies:
   pedantic: ^1.8.0+1
